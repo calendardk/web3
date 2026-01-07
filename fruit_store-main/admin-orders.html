@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đơn Hàng - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --sidebar-bg: #343a40;
+            --green: #4CAF50;
+            --blue: #2196F3;
+        }
+
+        body {
+            display: flex;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: white;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--green);
+            border-bottom: 1px solid #4b545c;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #c2c7d0;
+            text-decoration: none;
+            border-bottom: 1px solid #4b545c;
+            transition: 0.3s;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: #494e53;
+            color: white;
+            border-left: 4px solid var(--green);
+        }
+
+        .menu-item i {
+            width: 30px;
+            text-align: center;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            width: 100%;
+        }
+
+        .top-header {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- TABLE --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: var(--green);
+            color: white;
+        }
+
+        /* --- BADGES --- */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .bg-warning {
+            background: orange;
+        }
+
+        .bg-info {
+            background: #2196F3;
+        }
+
+        .bg-primary {
+            background: #3f51b5;
+        }
+
+        .bg-success {
+            background: #4CAF50;
+        }
+
+        .bg-danger {
+            background: #f44336;
+        }
+
+        /* --- ACTION BUTTONS --- */
+        .btn-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .btn-ship {
+            background: #2196F3;
+        }
+
+        .btn-done {
+            background: #4CAF50;
+        }
+
+        .btn-cancel {
+            background: #f44336;
+        }
+
+        .order-detail-row {
+            background: #f9f9f9;
+            display: none;
+        }
+
+        .order-detail-content {
+            padding: 15px;
+        }
+    </style>
+    <script src="js/user-manager.js"></script>
+    <script src="js/order-manager.js"></script>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">Elden Fruits</div>
+        <a href="admin.html" class="menu-item">
+            <i class="fas fa-box"></i> <span>Sản phẩm</span>
+        </a>
+        <a href="admin-orders.html" class="menu-item active">
+            <i class="fas fa-shopping-cart"></i> <span>Đơn hàng</span>
+        </a>
+        <a href="admin-users.html" class="menu-item">
+            <i class="fas fa-users"></i> <span>Khách hàng</span>
+        </a>
+        <a href="index.html" class="menu-item">
+            <i class="fas fa-sign-out-alt"></i> <span>Về trang chủ</span>
+        </a>
+    </div>
+
+    <div class="main-content">
+        <div class="top-header">
+            <h3>Quản Lý Đơn Hàng</h3>
+            <div id="admin-name">Chào, Admin</div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Khách Hàng</th>
+                    <th>Ngày Đặt</th>
+                    <th>Tổng Tiền</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="order-table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Check quyền Admin
+            if (typeof UserManager !== 'undefined') {
+                UserManager.checkAdminAccess();
+                const user = UserManager.getCurrentUser();
+                if (user) document.getElementById('admin-name').innerText = `Chào, ${user.fullName}`;
+            }
+
+            loadOrders();
+        });
+
+        function loadOrders() {
+            const orders = OrderManager.getAllOrders();
+            const tbody = document.getElementById('order-table-body');
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">Chưa có đơn hàng nào</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => {
+                const statusBadge = OrderManager.getBadge(order.status);
+
+                // Tạo nút hành động dựa trên trạng thái hiện tại
+                let actions = '';
+                if (order.status === 'pending') {
+                    actions = `
+                        <button class="btn-action btn-ship" onclick="updateStatus('${order.id}', 'shipping')">Giao hàng</button>
+                        <button class="btn-action btn-cancel" onclick="updateStatus('${order.id}', 'cancelled')">Hủy</button>
+                    `;
+                } else if (order.status === 'shipping') {
+                    actions = `
+                        <button class="btn-action btn-done" onclick="updateStatus('${order.id}', 'completed')">Hoàn tất</button>
+                    `;
+                } else {
+                    actions = '<span style="color:#aaa;">-</span>';
+                }
+
+                return `
+                    <tr onclick="toggleDetail('${order.id}')" style="cursor:pointer;">
+                        <td><b>${order.id}</b></td>
+                        <td>
+                            ${order.shipInfo.name}<br>
+                            <small>${order.shipInfo.phone}</small>
+                        </td>
+                        <td>${order.date}</td>
+                        <td style="color:red; font-weight:bold;">${order.total.toLocaleString()}₫</td>
+                        <td>${statusBadge}</td>
+                        <td>${actions}</td>
+                    </tr>
+                    <tr id="detail-${order.id}" class="order-detail-row">
+                        <td colspan="6">
+                            <div class="order-detail-content">
+                                <b>Địa chỉ:</b> ${order.shipInfo.address}<br>
+                                <b>Sản phẩm:</b>
+                                <ul>
+                                    ${order.items.map(i => `<li>${i.name} x ${i.quantity} (${(i.priceRaw * i.quantity).toLocaleString()}₫)</li>`).join('')}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStatus(id, status) {
+            // Ngăn sự kiện click tr làm mở detail
+            event.stopPropagation();
+
+            if (confirm(`Bạn có chắc muốn đổi trạng thái đơn ${id}?`)) {
+                OrderManager.updateStatus(id, status);
+                loadOrders(); // Load lại bảng
+            }
+        }
+
+        function toggleDetail(id) {
+            const row = document.getElementById(`detail-${id}`);
+            if (row.style.display === 'table-row') {
+                row.style.display = 'none';
+            } else {
+                row.style.display = 'table-row';
+            }
+        }
+    </script>
+</body>
+
+</html>

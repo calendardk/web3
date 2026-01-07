@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Của Tôi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .profile-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            /* Để không bị vỡ khung */
+        }
+
+        /* Ô username khóa lại không cho sửa */
+        input[readonly] {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+
+        /* Ô mật khẩu xác nhận làm nổi bật lên */
+        .confirm-pass {
+            border: 2px solid #ff9800;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-save:hover {
+            background-color: #45a049;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="profile-container">
+        <h2>Thông Tin Cá Nhân</h2>
+
+        <div class="form-group">
+            <label>Tên đăng nhập:</label>
+            <input type="text" id="username" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Họ và Tên:</label>
+            <input type="text" id="fullname" placeholder="Nhập họ tên...">
+        </div>
+
+        <div class="form-group">
+            <label>Số điện thoại:</label>
+            <input type="text" id="phone" placeholder="Nhập số điện thoại...">
+        </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <div class="form-group">
+            <label style="color: #d32f2f;">🔒 Nhập mật khẩu để xác nhận thay đổi:</label>
+            <input type="password" id="confirm-pass" class="confirm-pass"
+                placeholder="Nhập mật khẩu của bạn vào đây...">
+        </div>
+
+        <button class="btn-save" onclick="handleUpdate()">LƯU THAY ĐỔI</button>
+
+        <a href="index.html" class="back-link">← Quay về trang chủ</a>
+    </div>
+
+    <script src="js/user-manager.js"></script>
+
+    <script>
+        // 1. Khi vào trang: Lấy thông tin user điền vào ô
+        document.addEventListener("DOMContentLoaded", () => {
+            const user = UserManager.getCurrentUser();
+
+            if (!user) {
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "auth.html";
+                return;
+            }
+
+            document.getElementById("username").value = user.username;
+            document.getElementById("fullname").value = user.fullName || "";
+            document.getElementById("phone").value = user.phone || "";
+        });
+
+        // 2. Khi bấm nút Lưu
+        function handleUpdate() {
+            const name = document.getElementById("fullname").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            const pass = document.getElementById("confirm-pass").value;
+
+            // Kiểm tra nhập thiếu
+            if (!name || !phone) {
+                alert("Vui lòng nhập đầy đủ Tên và Số điện thoại!");
+                return;
+            }
+
+            if (!pass) {
+                alert("⚠️ CẢNH BÁO: Bạn phải nhập mật khẩu để xác nhận thay đổi này!");
+                document.getElementById("confirm-pass").focus(); // Trỏ chuột vào ô pass
+                return;
+            }
+
+            // Gọi hàm updateProfile (Hàm này giờ đã có check pass)
+            const result = UserManager.updateProfile(name, phone, pass);
+
+            if (result.success) {
+                alert("✅ " + result.message);
+                // Xóa ô mật khẩu đi cho an toàn
+                document.getElementById("confirm-pass").value = "";
+            } else {
+                alert("❌ " + result.message); // Thông báo sai mật khẩu
+            }
+        }
+    </script>
+
+</body>
+
+</html>
